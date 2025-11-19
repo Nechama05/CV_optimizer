@@ -17,54 +17,37 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
-// ----------------------------------------------------
-// Ensure generated directory exists
-// ----------------------------------------------------
 const GENERATED_DIR = path.join(process.cwd(), 'generated');
 await fs.mkdir(GENERATED_DIR, { recursive: true });
 
-// ----------------------------------------------------
-// Multer setup - store uploads in memory
-// ----------------------------------------------------
+
 const storage = multer.memoryStorage();
 const upload = multer({
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 } // 10MB
+  limits: { fileSize: 10 * 1024 * 1024 } 
 });
 
-// ----------------------------------------------------
-// Initialize Google Gemini
-// ----------------------------------------------------
+
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY
 });
-// ----------------------------------------------------
-// Route: GET /api/download/:filename - download PDF with headers and optional deletion
-// ----------------------------------------------------
+
 app.get('/api/download/:filename', async (req, res) => {
   const filename = req.params.filename;
   const filePath = path.join(GENERATED_DIR, filename);
 
   try {
-    await fs.access(filePath); // בודק אם הקובץ קיים
+    await fs.access(filePath); 
 
-    // הגדרת headers
+
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
 
-    // שליחת הקובץ
+  
     const stream = fsSync.createReadStream(filePath);
     stream.pipe(res);
 
-    // אופציונלי: מחיקת הקובץ אחרי הורדה
-    // stream.on('end', async () => {
-    //     try {
-    //         await fs.unlink(filePath);
-    //         console.log(Deleted file: ${filename});
-    //     } catch (err) {
-    //         console.error('Error deleting file:', err);
-    //     }
-    // });
+
 
     stream.on('error', (err) => {
       console.error('Stream error:', err);
@@ -78,9 +61,6 @@ app.get('/api/download/:filename', async (req, res) => {
 });
 
 
-// ----------------------------------------------------
-// Route: POST /api/optimize - CV optimization
-// ----------------------------------------------------
 app.post('/api/optimize', upload.single('cv'), async (req, res) => {
   try {
     const jobDescription = req.body.job || "Optimize this CV for general use.";
@@ -124,31 +104,13 @@ Attached is the PDF CV.
     const pdfContent = pdfText || "";
     const frontendContent = clientText ? SPLIT_KEY + clientText : "";
 
-    // Create PDF
-    // const filename = `optimized_${Date.now()}.pdf`;
-    // const filePath = path.join(GENERATED_DIR, filename);
 
-    // const pdf = new PDFDocument();
-    // const writer = pdf.pipe(fsSync.createWriteStream(filePath));
-
-    // pdf.fontSize(14).text(pdfContent, { align: "left" });
-    // pdf.end();
-
-    // writer.on("finish", () => {
-    //   res.json({
-    //     filename,
-    //     frontendContent // זה מה שהפרונט יציג
-    //   });
-    // });
-
-    // Create PDF
 const filename = `optimized_${Date.now()}.pdf`;
 const filePath = path.join(GENERATED_DIR, filename);
 
 const pdf = new PDFDocument({ margin: 50 });
 const writer = pdf.pipe(fsSync.createWriteStream(filePath));
 
-// פיצול לטקסטים שורות ושינוי כוכביות לרשימות
 const lines = pdfContent.split("\n");
 lines.forEach(line => {
     line = line.trim();
@@ -172,7 +134,7 @@ pdf.end();
 writer.on("finish", () => {
     res.json({
         filename,
-        frontendContent // זה מה שהפרונט יציג
+        frontendContent 
     });
 });
 
@@ -183,9 +145,6 @@ writer.on("finish", () => {
 });
 
 
-// ----------------------------------------------------
-// Route: GET /api/download/:filename - download PDF
-// ----------------------------------------------------
 app.get('/api/download/:filename', async (req, res) => {
   const filename = req.params.filename;
   const filePath = path.join(GENERATED_DIR, filename);
@@ -198,9 +157,7 @@ app.get('/api/download/:filename', async (req, res) => {
   }
 });
 
-// ----------------------------------------------------
-// Start server
-// ----------------------------------------------------
+
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });

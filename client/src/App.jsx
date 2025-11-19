@@ -51,9 +51,6 @@ export default function CVOptimizer() {
     window.open(`${API_URL}/api/download/${pdfFilename}`, '_blank');
   };
 
-  // =====================
-  // DESIGN
-  // =====================
 
   const containerStyle = {
     minHeight: '100vh',
